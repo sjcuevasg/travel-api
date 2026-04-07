@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    //le dice a type que version de js convierte el codigo ts
+    "target": "ES2020",
+    //define como se manejan los imports y exports, 
+    // commonjs es el sistema de modulos de node (require/module.exports)
+    "module": "commonjs",
+    //le dice a type que tipo de librerias de js va a usar, en este caso las de ES2020
+    "lib": ["ES2020"],
+    //importante:
+    //al compilar ts a js los archivos resultantes se guardan 
+    // en la carpeta dist, esta es la que se despliega en produccion
+    "outDir": "./dist",
+    //le dice a type que la carpeta raiz del proyecto es src, esto es importante para que al compilar los archivos 
+    // ts se mantenga la misma estructura de carpetas en dist
+    "rootDir": "./src",
+    //activa toda regla de ts
+    "strict": true,
+    //permite que importe librerias de commonjs usando 
+    //la sintaxis de import/export, esto es importante para usar librerias como express
+    "esModuleInterop": true,
+    //no valida los archivos de las librerias, esto es importante para evitar errores al
+    // compilar si las librerias no tienen tipos definidos
+    "skipLibCheck": true,
+    //evita bugs entre sos diferentes
+    "forceConsistentCasingInFileNames": true
+  },
+ //solo compila lo de src 
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
