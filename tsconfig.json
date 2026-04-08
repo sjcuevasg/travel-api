@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    //le dice a type que tipo de sistema de modulos va a usar
+    // , en este caso node, esto es importante para que al compilar los archivos ts 
+    // se mantenga la misma estructura de carpetas en dist
+    "moduleResolution": "bundler",
     //le dice a type que version de js convierte el codigo ts
     "target": "ES2020",
     //define como se manejan los imports y exports, 

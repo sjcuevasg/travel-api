@@ -1,0 +1,31 @@
+//le dice a prisma que genere un cliente JS/TS
+//es el que luego usamos para hacer queries prisma.etc
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+}
+//cada model se convierte en una tabla en postgreSQL
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //instruccion que le dice a prisma que en TS
+  //el proyecto se llama User pero en la bd 
+  //la tabla se llama users
+  @@map("users")
+}
+
+//le dice a postgre que la columna Role
+//solo puede tener uno de estos 3 valores
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
