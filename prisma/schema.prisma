@@ -1,12 +1,44 @@
-//le dice a prisma que genere un cliente JS/TS
-//es el que luego usamos para hacer queries prisma.etc
 generator client {
   provider = "prisma-client-js"
 }
+
+// DESARROLLO: sqlite — archivo local, sin servidor.
+// PRODUCCIÓN (Railway): cambiar a "postgresql" y actualizar DATABASE_URL.
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
-//cada model se convierte en una tabla en postgreSQL
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+// TripStatus modela el ciclo de vida de un viaje empresarial.
+// PENDING → APPROVED → IN_PROGRESS → COMPLETED
+//                    ↘ CANCELLED
+enum TripStatus {
+  PENDING
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ExpenseCategory clasifica el tipo de gasto para reportes y análisis.
+enum ExpenseCategory {
+  TRANSPORT
+  ACCOMMODATION
+  FOOD
+  ENTERTAINMENT
+  OFFICE
+  OTHER
+}
+
+// ─── MODELS ───────────────────────────────────────────────────────────────────
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -16,16 +48,77 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  //instruccion que le dice a prisma que en TS
-  //el proyecto se llama User pero en la bd 
-  //la tabla se llama users
+  // Un usuario puede gestionar muchos viajes (relación nombrada para evitar ambigüedad)
+  managedTrips     Trip[]    @relation("TripManager")
+  // Un usuario puede haber sido registrado como responsable de gastos
+  createdExpenses  Expense[] @relation("ExpenseCreator")
+
   @@map("users")
 }
 
-//le dice a postgre que la columna Role
-//solo puede tener uno de estos 3 valores
-enum Role {
-  ADMIN
-  MANAGER
-  EMPLOYEE
+model Trip {
+  id          String     @id @default(uuid())
+  title       String
+  destination String
+  startDate   DateTime
+  endDate     DateTime
+  status      TripStatus @default(PENDING)
+  description String?
+  // Float es suficiente para un MVP. En producción usar Decimal para evitar
+  // problemas de precisión en cálculos financieros (0.1 + 0.2 ≠ 0.3 en Float).
+  budget      Float?
+
+  // Relación con el manager que creó y gestiona el viaje
+  managerId String
+  manager   User   @relation("TripManager", fields: [managerId], references: [id])
+
+  // Un viaje contiene múltiples gastos y actividades
+  // onDelete: Cascade elimina automáticamente los gastos/actividades si se borra el viaje
+  expenses   Expense[]  @relation("TripExpenses")
+  activities Activity[] @relation("TripActivities")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("trips")
+}
+
+model Expense {
+  id          String          @id @default(uuid())
+  title       String
+  amount      Float
+  category    ExpenseCategory @default(OTHER)
+  date        DateTime
+  description String?
+  // receipt: URL del comprobante subido (para implementar en versión futura con S3 o similar)
+  receipt     String?
+
+  tripId String
+  trip   Trip   @relation("TripExpenses", fields: [tripId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("ExpenseCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  // duration en minutos: 60 = 1 hora, 90 = 1.5 horas, etc.
+  duration    Int?
+
+  tripId String
+  trip   Trip   @relation("TripActivities", fields: [tripId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("activities")
 }

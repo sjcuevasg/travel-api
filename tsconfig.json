@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
     //le dice a type que tipo de sistema de modulos va a usar
-    // , en este caso node, esto es importante para que al compilar los archivos ts 
-    // se mantenga la misma estructura de carpetas en dist
-    "moduleResolution": "bundler",
+    // NodeNext es el algoritmo moderno para Node.js. Con "type":"commonjs" en package.json
+    // todos los .ts se tratan como CommonJS: no necesitan extension .js en los imports
+    "moduleResolution": "NodeNext",
     //le dice a type que version de js convierte el codigo ts
     "target": "ES2020",
-    //define como se manejan los imports y exports, 
-    // commonjs es el sistema de modulos de node (require/module.exports)
-    "module": "commonjs",
+    //NodeNext como module le dice a TypeScript que respete las reglas de resolucion de Node.js
+    // Como package.json tiene "type":"commonjs", genera require() en la salida (no import/export ESM)
+    "module": "NodeNext",
     //le dice a type que tipo de librerias de js va a usar, en este caso las de ES2020
     "lib": ["ES2020"],
+    "types": ["node"],
     //importante:
     //al compilar ts a js los archivos resultantes se guardan 
     // en la carpeta dist, esta es la que se despliega en produccion
@@ -29,7 +30,13 @@
     //evita bugs entre sos diferentes
     "forceConsistentCasingInFileNames": true
   },
- //solo compila lo de src 
+ //solo compila lo de src
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  // ts-node lee esta seccion: le dice que NO use modo ESM aunque module sea NodeNext
+  // porque package.json tiene "type":"commonjs", ts-node debe usar CJS nativo
+  "ts-node": {
+    "esm": false,
+    "transpileOnly": false
+  }
 }
